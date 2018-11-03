@@ -1,7 +1,10 @@
+pub mod db;
+
 #[cfg(test)]
 mod tests {
     #[test]
     fn it_works() {
-        assert_eq!(2 + 2, 4);
+        println!("{}", super::db::table("abc").select().column("a").get_sql());
+        assert_eq!(1+1, 2);
     }
 }

@@ -181,6 +181,7 @@ impl OrderList {
 
     pub fn to_string(&self) -> String{
         let mut rst = String::new();
+        rst+="ORDER BY ";
         for i in 0..self.orders.len() {
             if i==0 {
                 rst += &self.orders[i].to_string();
@@ -317,6 +318,36 @@ impl QueryBuilder {
         self
     }
 
+    pub fn orderby(&mut self, col :&str, order :&str) -> &mut Self{
+        self.orders.push_back(
+            OrderItem{
+                order_type:OrderType::Asc,
+                column: col.to_string()
+            }
+        );
+        self
+    }
+
+    pub fn asc(&mut self, col :&str) -> &mut Self{
+        self.orders.push_back(
+            OrderItem{
+                order_type:OrderType::Asc,
+                column: col.to_string()
+            }
+        );
+        self
+    }
+
+    pub fn desc(&mut self, col :&str) -> &mut Self{
+        self.orders.push_back(
+            OrderItem{
+                order_type:OrderType::Desc,
+                column: col.to_string()
+            }
+        );
+        self
+    }
+
     pub fn get_sql(&self) -> String{
         match self.query_type {
             QueryType::None => String::new(),
@@ -326,17 +357,17 @@ impl QueryBuilder {
                                 table=self.table_name,
                                 join=self.joins.to_string(),
                                 where=self.wheres.to_string(),
-                                orderby=""),
-            QueryType::Update => format!("UPDATE {table} SET {update} WHERE {where};",
+                                orderby=self.orders.to_string()),
+            QueryType::Update => format!("UPDATE {table} SET {update} {where};",
                                 update="",
                                 table=self.table_name,
-                                where=""),
+                                where=self.wheres.to_string()),
             QueryType::Insert => format!("INSERT INTO {table} {columns} VALUES {values};",
                                 columns=self.columns.to_string(),
                                 table=self.table_name,
                                 values=""),
-            QueryType::Delete => format!("DELETE FROM {table} WHERE {where};",
-                                where="",
+            QueryType::Delete => format!("DELETE FROM {table} {where};",
+                                where=self.wheres.to_string(),
                                 table=self.table_name),
         }
     }

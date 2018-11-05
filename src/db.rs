@@ -84,11 +84,11 @@ pub struct QueryBuilder {
 impl WhereCond {
     pub fn to_string(&self) -> String{
         let mut rst = String::new();
-        rst += "(";
         rst += &self.left;
         rst += &self.op;
+        rst += "'";
         rst += &self.right;
-        rst += ")";
+        rst += "'";
         rst
     }
 }
@@ -126,16 +126,19 @@ impl WhereList {
 
     pub fn to_string(&self) -> String{
         let mut rst = String::new();
-        rst.push('(');
+        rst.push_str("WHERE ");
         for i in 0..self.wheres.len() {
             if i==0 {
                 rst += &self.wheres[i].to_string();
             }else{
-                rst += ",";
+                rst += match self.wheres[i].where_type{
+                    WhereType::And => "AND ",
+                    WhereType::Or => "OR "
+                };
                 rst += &self.wheres[i].to_string();
             }
+            rst += " ";
         }
-        rst.push(')');
         rst
     }
 
@@ -322,7 +325,7 @@ impl QueryBuilder {
                                 columns=self.columns.to_string(),
                                 table=self.table_name,
                                 join=self.joins.to_string(),
-                                where="",
+                                where=self.wheres.to_string(),
                                 orderby=""),
             QueryType::Update => format!("UPDATE {table} SET {update} WHERE {where};",
                                 update="",

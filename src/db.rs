@@ -75,6 +75,7 @@ pub struct QueryBuilder {
     query_type :QueryType,
     table_name :String,
     columns :ColumnList,
+    joins :JoinList,
     wheres :WhereList,
     orders :OrderList,
     distinct :bool
@@ -232,6 +233,31 @@ impl QueryBuilder {
         self
     }
 
+    pub fn join(&mut self, table : &str) -> &mut Self{
+        self.joins.push_back(JoinItem{join_type:JoinType::None, table:table.to_string()});
+        self
+    }
+
+    pub fn leftjoin(&mut self, table : &str) -> &mut Self{
+        self.joins.push_back(JoinItem{join_type:JoinType::Left, table:table.to_string()});
+        self
+    }
+
+    pub fn rightjoin(&mut self, table : &str) -> &mut Self{
+        self.joins.push_back(JoinItem{join_type:JoinType::Right, table:table.to_string()});
+        self
+    }
+
+    pub fn innerjoin(&mut self, table : &str) -> &mut Self{
+        self.joins.push_back(JoinItem{join_type:JoinType::Inner, table:table.to_string()});
+        self
+    }
+
+    pub fn fulljoin(&mut self, table : &str) -> &mut Self{
+        self.joins.push_back(JoinItem{join_type:JoinType::Full, table:table.to_string()});
+        self
+    }
+
     pub fn cond(&mut self, left :&str, op :&str, right :&str) -> &mut Self{
         self.wheres.push_back(WhereCond{where_type: WhereType::And,
             left: left.to_string(),
@@ -291,10 +317,11 @@ impl QueryBuilder {
     pub fn get_sql(&self) -> String{
         match self.query_type {
             QueryType::None => String::new(),
-            QueryType::Select => format!("SELECT {distinct} {columns} FROM {table} {where} {orderby};",
+            QueryType::Select => format!("SELECT {distinct} {columns} FROM {table} {join} {where} {orderby};",
                                 distinct=match self.distinct{true=>"DISTINCT",false=>""},
                                 columns=self.columns.to_string(),
                                 table=self.table_name,
+                                join=self.joins.to_string(),
                                 where="",
                                 orderby=""),
             QueryType::Update => format!("UPDATE {table} SET {update} WHERE {where};",
@@ -319,6 +346,7 @@ pub fn table(name: &str) -> QueryBuilder{
         query_type :QueryType::None,
         table_name :name.to_string(),
         columns :ColumnList::new(),
+        joins :JoinList::new(),
         wheres :WhereList::new(),
         orders :OrderList::new(),
         distinct :false
